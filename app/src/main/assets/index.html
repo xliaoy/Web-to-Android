@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>zxui 测试开发模板</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f5f5;padding:16px;color:#1a1a1a}.container{max-width:480px;margin:0 auto}h1{font-size:20px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:10px}.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}.card-title{font-size:14px;font-weight:600;color:#333;margin-bottom:4px}.card-desc{font-size:12px;color:#999;margin-bottom:10px}.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;background:#6366f1;color:#fff}.btn:active{transform:scale(.96)}.btn-danger{background:#ef4444}.btn-success{background:#22c55e}.btn-outline{background:transparent;border:1px solid #d1d5db;color:#374151}.btn-group{display:flex;gap:8px;flex-wrap:wrap}.btn-group .btn{flex:1;min-width:60px;justify-content:center}.input{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;outline:none;background:#fff}.input:focus{border-color:#6366f1}.input-group{display:flex;gap:8px;margin-bottom:10px}.input-group .input{flex:1}.output{background:#f8f9fa;border-radius:8px;padding:12px;margin-top:10px;font-size:12px;font-family:monospace;word-break:break-all;max-height:200px;overflow-y:auto;border:1px solid #e5e7eb;color:#1f2937}.output.ok{background:#f0fdf4;border-color:#86efac;color:#166534}.output.err{background:#fef2f2;border-color:#fca5a5;color:#991b1b}.badge{display:inline-block;padding:2px 12px;border-radius:12px;font-size:11px;font-weight:500}.badge.ok{background:#dcfce7;color:#16a34a}.badge.fail{background:#fecaca;color:#dc2626}.badge.wait{background:#fef08a;color:#ca8a04}.flex{display:flex;align-items:center;gap:8px}.flex-between{display:flex;justify-content:space-between;align-items:center}.mt-2{margin-top:8px}.gap-2{gap:8px}.text-sm{font-size:12px;color:#6b7280}.log-item{padding:3px 0;border-bottom:1px solid #f3f4f6;font-size:12px}.log-item:last-child{border-bottom:none}.log-time{color:#9ca3af;margin-right:8px}
+</style>
+</head>
+<body>
+<div class="container" id="app">
+<h1><i class="fas fa-code"></i> zxui 测试开发模板</h1>
+
+<div class="card">
+<div class="flex gap-2" :class="bridgeReady?'badge ok':'badge wait'">
+<i :class="bridgeReady?'fas fa-check-circle':'fas fa-spinner fa-pulse'"></i>
+{{ bridgeReady?'Bridge 已就绪':'等待 Bridge...' }}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><i class="fas fa-folder"></i> 获取存储目录</div>
+<div class="card-desc">zxui.获取外部存储目录()</div>
+<button class="btn" @click="getDir" :disabled="!bridgeReady||loading"><i class="fas fa-play"></i> 执行</button>
+<div v-if="dir" class="output ok"><i class="fas fa-check-circle"></i> {{ dir }}</div>
+</div>
+
+<div class="card">
+<div class="card-title"><i class="fas fa-search"></i> 判断文件存在</div>
+<div class="card-desc">zxui.判断指定文件(路径)</div>
+<div class="input-group">
+<input class="input" v-model="checkPath" placeholder="/storage/emulated/0/test.txt" :disabled="!bridgeReady||loading">
+<button class="btn btn-success" @click="checkFile" :disabled="!bridgeReady||loading||!checkPath"><i class="fas fa-check"></i> 检查</button>
+</div>
+<div v-if="checkResult!==null" class="output" :class="checkResult?'ok':'err'">
+<i :class="checkResult?'fas fa-check-circle':'fas fa-times-circle'"></i> {{ checkResult?'文件存在':'文件不存在' }}
+<div class="text-sm mt-2">{{ checkPath }}</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><i class="fas fa-save"></i> 保存文件</div>
+<div class="card-desc">zxui.保存指定文件(路径, dataUri)</div>
+<input class="input" v-model="savePath" placeholder="/storage/emulated/0/test.txt" :disabled="!bridgeReady||loading" style="margin-bottom:8px">
+<textarea class="input" v-model="saveContent" rows="2" placeholder="文件内容" :disabled="!bridgeReady||loading" style="resize:vertical;font-family:inherit;margin-bottom:8px"></textarea>
+<div class="btn-group">
+<button class="btn" @click="saveFile" :disabled="!bridgeReady||loading||!savePath"><i class="fas fa-floppy-disk"></i> 保存</button>
+<button class="btn btn-success" @click="saveBase64" :disabled="!bridgeReady||loading||!savePath"><i class="fas fa-file-code"></i> Base64</button>
+</div>
+<div v-if="saveRes" class="output" :class="saveRes.ok?'ok':'err'">
+<i :class="saveRes.ok?'fas fa-check-circle':'fas fa-times-circle'"></i> {{ saveRes.ok?'保存成功':'保存失败' }}
+<div class="text-sm mt-2">{{ saveRes.msg||savePath }}</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><i class="fas fa-database"></i> 导出测试数据</div>
+<div class="card-desc">生成 JSON 备份文件并保存</div>
+<button class="btn" @click="exportData" :disabled="!bridgeReady||loading"><i class="fas fa-file-export"></i> 导出</button>
+<div v-if="exportRes" class="output" :class="exportRes.ok?'ok':'err'">
+<i :class="exportRes.ok?'fas fa-check-circle':'fas fa-times-circle'"></i> {{ exportRes.ok?'导出成功: '+exportRes.file:'导出失败' }}
+<div class="text-sm mt-2">{{ exportRes.msg||'' }}</div>
+</div>
+</div>
+
+<div class="card">
+<div class="flex-between">
+<span class="card-title"><i class="fas fa-list"></i> 日志</span>
+<button class="btn btn-outline" @click="logs=[]" style="padding:2px 12px;font-size:11px"><i class="fas fa-eraser"></i> 清空</button>
+</div>
+<div class="output" style="max-height:250px">
+<div v-if="!logs.length" style="color:#9ca3af;text-align:center;padding:16px 0">暂无日志</div>
+<div v-for="(l,i) in logs" :key="i" class="log-item">
+<span class="log-time">{{ l.t }}</span>
+<span :style="l.type==='err'?'color:#dc2626':l.type==='ok'?'color:#16a34a':'color:#374151'">{{ l.msg }}</span>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+// ===== Bridge 引入 =====
+window.__bridgeReady = new Promise(function(resolve) {
+if (typeof AndroidBridge !== 'undefined') { resolve(); return; }
+window.onBridgeReady = resolve;
+});
+
+const { createApp, ref, onMounted } = Vue;
+
+createApp({
+setup() {
+const bridgeReady = ref(false);
+const loading = ref(false);
+const dir = ref('');
+const checkPath = ref('/storage/emulated/0/test.txt');
+const checkResult = ref(null);
+const savePath = ref('/storage/emulated/0/test.json');
+const saveContent = ref('{"test":"hello","time":"'+new Date().toISOString()+'"}');
+const saveRes = ref(null);
+const exportRes = ref(null);
+const logs = ref([]);
+
+const log = (msg, type='info') => {
+const t = new Date().toLocaleTimeString();
+logs.value.unshift({t,msg,type});
+if(logs.value.length>200) logs.value.pop();
+};
+
+const exec = async (fn, label) => {
+if(loading.value) return;
+loading.value = true;
+log('⏳ '+label,'info');
+try {
+const r = await fn();
+log('✅ '+label+' 完成','ok');
+return r;
+} catch(e) {
+log('❌ '+label+' 失败: '+e.message,'err');
+throw e;
+} finally {
+loading.value = false;
+}
+};
+
+onMounted(async () => {
+try {
+await __bridgeReady;
+bridgeReady.value = true;
+log('Bridge 已就绪','ok');
+} catch(e) {
+bridgeReady.value = false;
+log('Bridge 加载失败: '+e.message,'err');
+}
+});
+
+const getDir = () => exec(async () => {
+if(typeof zxui==='undefined') throw new Error('zxui 未定义');
+const r = zxui.获取外部存储目录();
+dir.value = r || '(空)';
+return r;
+}, '获取存储目录');
+
+const checkFile = () => exec(async () => {
+if(typeof zxui==='undefined') throw new Error('zxui 未定义');
+const r = zxui.判断指定文件(checkPath.value);
+checkResult.value = !!r;
+return r;
+}, '检查文件: '+checkPath.value);
+
+const saveFile = () => exec(async () => {
+if(typeof zxui==='undefined') throw new Error('zxui 未定义');
+const data = 'data:text/plain;charset=utf-8,'+encodeURIComponent(saveContent.value);
+const ok = zxui.保存指定文件(savePath.value, data);
+saveRes.value = {ok:!!ok, msg:ok?'':'保存失败'};
+return ok;
+}, '保存文件');
+
+const saveBase64 = () => exec(async () => {
+if(typeof zxui==='undefined') throw new Error('zxui 未定义');
+const b64 = btoa(unescape(encodeURIComponent(saveContent.value)));
+const data = 'data:text/plain;base64,'+b64;
+const ok = zxui.保存指定文件(savePath.value, data);
+saveRes.value = {ok:!!ok, msg:ok?'':'保存失败'};
+return ok;
+}, '保存 Base64');
+
+const exportData = () => exec(async () => {
+if(typeof zxui==='undefined') throw new Error('zxui 未定义');
+const data = {
+app:'测试开发模板',
+exportTime:new Date().toISOString(),
+items:[{id:1,name:'示例数据',value:100}]
+};
+const json = JSON.stringify(data,null,2);
+const fn = '测试数据_'+new Date().toISOString().slice(0,10)+'.json';
+const base = zxui.获取外部存储目录() || '/storage/emulated/0/';
+const full = base+'测试模板/'+fn;
+const uri = 'data:text/plain;base64,'+btoa(unescape(encodeURIComponent(json)));
+const ok = zxui.保存指定文件(full, uri);
+exportRes.value = {ok:!!ok, file:fn, msg:ok?'':'保存失败'};
+return ok;
+}, '导出测试数据');
+
+return {
+bridgeReady, loading, dir, checkPath, checkResult,
+savePath, saveContent, saveRes, exportRes, logs,
+getDir, checkFile, saveFile, saveBase64, exportData
+};
+}
+}).mount('#app');
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">株馨记账</string>
+    <string name="search_menu_title">搜索</string>
+    <string name="permission_title">权限申请</string>
+    <string name="permission_message">株馨记账需要以下权限才能正常运行</string>
+    <string name="permission_confirm">确认</string>
+    <string name="permission_cancel">取消</string>
+</resources>
