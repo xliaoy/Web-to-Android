@@ -115,10 +115,10 @@ loading.value = true;
 log('⏳ '+label,'info');
 try {
 const r = await fn();
-log('✅ '+label+' 完成','ok');
+log('✔ '+label+' 完成','ok');
 return r;
 } catch(e) {
-log('❌ '+label+' 失败: '+e.message,'err');
+log('✕ '+label+' 失败: '+e.message,'err');
 throw e;
 } finally {
 loading.value = false;
